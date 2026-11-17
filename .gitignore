@@ -1,0 +1,12 @@
+# File privati, memoria interna, licenze interne e documenti contrattuali (MAI su repo pubblico)
+private/
+PROJECT_MEMORY.md
+LICENSES.md
+
+# File di sistema e temporanei
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+node_modules/

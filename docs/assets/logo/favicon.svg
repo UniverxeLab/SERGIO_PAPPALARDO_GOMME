@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Tire Service di Sergio Pappalardo">
+  <defs>
+    <linearGradient id="goldArc" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EA580C" />
+      <stop offset="50%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+    <linearGradient id="rimSilver" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+    <clipPath id="topHalf">
+      <rect x="6" y="8" width="52" height="33" />
+    </clipPath>
+  </defs>
+
+  <!-- Scudo scuro moderno -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0B0E14" stroke="#252B37" stroke-width="1.5" />
+
+  <!-- Ali/archi dinamici giallo-ambra (richiamo diretto al logo originale) -->
+  <path d="M9 36 C11 22, 20 13, 32 13 C44 13, 53 22, 55 36" fill="none" stroke="url(#goldArc)" stroke-width="2.4" stroke-linecap="round" opacity="0.92" />
+  <path d="M13 38 L7 38 L10 33 Z" fill="#FBBF24" />
+  <path d="M51 38 L57 38 L54 33 Z" fill="#FBBF24" />
+
+  <!-- Mezza ruota + cerchio a 5 razze che emerge sopra la linea orizzonte -->
+  <g clip-path="url(#topHalf)">
+    <circle cx="32" cy="40" r="19" fill="#171C26" stroke="#2D3442" stroke-width="5.5" />
+    <circle cx="32" cy="40" r="14" fill="#0E1219" stroke="url(#rimSilver)" stroke-width="1.6" />
+    <!-- 5 razze superiori pulite -->
+    <g fill="url(#rimSilver)">
+      <polygon points="30.8,26.5 33.2,26.5 32.6,35 31.4,35" />
+      <polygon points="19.8,33.5 21.1,31.4 28.4,36.2 27.6,37.6" />
+      <polygon points="44.2,33.5 42.9,31.4 35.6,36.2 36.4,37.6" />
+    </g>
+    <circle cx="32" cy="40" r="4.2" fill="#0B0E14" stroke="#FBBF24" stroke-width="1.8" />
+    <circle cx="32" cy="40" r="1.5" fill="#FBBF24" />
+  </g>
+
+  <!-- Linea asfalto / orizzonte ambra-acciaio -->
+  <rect x="8" y="40.5" width="48" height="2.6" rx="1.3" fill="url(#goldArc)" />
+
+  <!-- Tacche battistrada stilizzate sotto la linea -->
+  <rect x="14" y="47" width="36" height="2" rx="1" fill="#334155" />
+  <rect x="21" y="51.5" width="22" height="2" rx="1" fill="#F59E0B" opacity="0.75" />
+</svg>
