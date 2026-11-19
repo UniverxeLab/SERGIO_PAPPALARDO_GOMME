@@ -3,11 +3,11 @@
 
   const WORKSHOP_SCHEDULE = {
     0: { name: "Domenica", slots: [] },
-    1: { name: "Lunedì", slots: [[480, 780], [870, 1170]] },      // 08:00-13:00, 14:30-19:30
-    2: { name: "Martedì", slots: [[480, 780], [870, 1170]] },     // 08:00-13:00, 14:30-19:30
-    3: { name: "Mercoledì", slots: [[480, 780], [870, 1140]] },   // 08:00-13:00, 14:30-19:00
-    4: { name: "Giovedì", slots: [[480, 780], [870, 1170]] },     // 08:00-13:00, 14:30-19:30
-    5: { name: "Venerdì", slots: [[480, 780], [870, 1170]] },     // 08:00-13:00, 14:30-19:30
+    1: { name: "Lunedì", slots: [[480, 780], [900, 1140]] },      // 08:00-13:00, 15:00-19:00
+    2: { name: "Martedì", slots: [[480, 780], [900, 1140]] },     // 08:00-13:00, 15:00-19:00
+    3: { name: "Mercoledì", slots: [[480, 780], [900, 1140]] },   // 08:00-13:00, 15:00-19:00
+    4: { name: "Giovedì", slots: [[480, 780], [900, 1140]] },     // 08:00-13:00, 15:00-19:00
+    5: { name: "Venerdì", slots: [[480, 780], [900, 1140]] },     // 08:00-13:00, 15:00-19:00
     6: { name: "Sabato", slots: [[480, 780]] }                    // 08:00-13:00
   };
 
@@ -21,10 +21,63 @@
     Sat: 6
   };
 
+  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  let holidayState = {
+    active: false,
+    startDate: "",
+    endDate: "",
+    message: ""
+  };
+
+  let holidayModalHandlersBound = false;
+
   function formatMinutes(totalMinutes) {
     const h = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
     const m = String(totalMinutes % 60).padStart(2, "0");
     return `${h}:${m}`;
+  }
+
+  function formatDateIt(isoDate, includeWeekday = false) {
+    if (!ISO_DATE_RE.test(isoDate)) return "";
+    const [y, m, d] = isoDate.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    const options = {
+      timeZone: "UTC",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    };
+    if (includeWeekday) {
+      options.weekday = "long";
+      delete options.year;
+    }
+    return new Intl.DateTimeFormat("it-IT", options).format(dt);
+  }
+
+  function getReopenDayLabelIt(endIsoDate) {
+    if (!ISO_DATE_RE.test(endIsoDate)) return "";
+    const [y, m, d] = endIsoDate.split("-").map(Number);
+    for (let offset = 1; offset <= 14; offset++) {
+      const candidate = new Date(Date.UTC(y, m - 1, d + offset));
+      const schedule = WORKSHOP_SCHEDULE[candidate.getUTCDay()];
+      if (schedule && schedule.slots.length > 0) {
+        const formatted = new Intl.DateTimeFormat("it-IT", {
+          timeZone: "UTC",
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        }).format(candidate);
+        return `Riapriamo ${formatted} alle ${formatMinutes(schedule.slots[0][0])}`;
+      }
+    }
+    return "";
+  }
+
+  function isHolidayCurrentlyActive(config, todayIsoDate) {
+    if (!config || !config.active) return false;
+    if (!ISO_DATE_RE.test(config.startDate) || !ISO_DATE_RE.test(config.endDate)) return false;
+    return todayIsoDate >= config.startDate && todayIsoDate <= config.endDate;
   }
 
   function getRomeDateParts() {
@@ -32,6 +85,9 @@
     const formatter = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/Rome",
       weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
       hour12: false
@@ -44,18 +100,34 @@
     const day = WEEKDAY_MAP[map.weekday] ?? now.getDay();
     const hour = Number(map.hour) % 24;
     const minute = Number(map.minute);
-    return { day, minutes: hour * 60 + minute };
+    const isoDate = `${map.year}-${map.month}-${map.day}`;
+    return { day, minutes: hour * 60 + minute, isoDate };
   }
 
   function evaluateWorkshopStatus() {
-    const { day, minutes } = getRomeDateParts();
+    const { day, minutes, isoDate } = getRomeDateParts();
+
+    if (isHolidayCurrentlyActive(holidayState, isoDate)) {
+      const reopenLabel = getReopenDayLabelIt(holidayState.endDate);
+      return {
+        isOpen: false,
+        isHoliday: true,
+        day,
+        isoDate,
+        label: "CHIUSI · FERIE",
+        detail: reopenLabel || `Chiusi fino al ${formatDateIt(holidayState.endDate)}`
+      };
+    }
+
     const today = WORKSHOP_SCHEDULE[day];
 
     for (const [start, end] of today.slots) {
       if (minutes >= start && minutes < end) {
         return {
           isOpen: true,
+          isHoliday: false,
           day,
+          isoDate,
           label: "APERTI ORA",
           detail: `Chiude alle ${formatMinutes(end)}`
         };
@@ -67,7 +139,9 @@
       if (minutes < start) {
         return {
           isOpen: false,
+          isHoliday: false,
           day,
+          isoDate,
           label: "CHIUSI ORA",
           detail: `Riapre alle ${formatMinutes(start)}`
         };
@@ -83,14 +157,16 @@
         const when = offset === 1 ? "domani" : nextSchedule.name;
         return {
           isOpen: false,
+          isHoliday: false,
           day,
+          isoDate,
           label: "CHIUSI ORA",
           detail: `Riapre ${when} alle ${openTime}`
         };
       }
     }
 
-    return { isOpen: false, day, label: "CHIUSI ORA", detail: "" };
+    return { isOpen: false, isHoliday: false, day, isoDate, label: "CHIUSI ORA", detail: "" };
   }
 
   function updateWorkshopStatusUI() {
@@ -204,8 +280,130 @@
     document.addEventListener("touchstart", tryPlay, { once: true, passive: true });
   }
 
+  function bindHolidayModalCloseHandlers() {
+    if (holidayModalHandlersBound) return;
+    holidayModalHandlersBound = true;
+
+    const modal = document.getElementById("holiday-modal");
+    if (!modal) return;
+
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.classList.remove("has-holiday-modal");
+      if (holidayState.startDate && holidayState.endDate) {
+        const key = `ts_ferie_seen_${holidayState.startDate}_${holidayState.endDate}`;
+        try {
+          window.sessionStorage.setItem(key, "1");
+        } catch {
+          // sessionStorage non disponibile in modalità restrittive
+        }
+      }
+    };
+
+    modal.querySelectorAll("[data-holiday-close]").forEach((el) => {
+      el.addEventListener("click", closeModal);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !modal.hidden) {
+        closeModal();
+      }
+    });
+  }
+
+  function renderHolidayNotice(todayIsoDate) {
+    const bar = document.getElementById("holiday-bar");
+    const modal = document.getElementById("holiday-modal");
+    const activeNow = isHolidayCurrentlyActive(holidayState, todayIsoDate);
+
+    if (!activeNow) {
+      if (bar) bar.hidden = true;
+      if (modal) modal.hidden = true;
+      document.body.classList.remove("has-holiday-modal");
+      return;
+    }
+
+    const startIt = formatDateIt(holidayState.startDate);
+    const endIt = formatDateIt(holidayState.endDate);
+    const periodText = startIt === endIt ? `Oggi ${startIt}` : `Dal ${startIt} al ${endIt}`;
+    const reopenText = getReopenDayLabelIt(holidayState.endDate);
+    const userMessage = (holidayState.message || "").trim() || "L'officina è chiusa per ferie nelle date indicate.";
+
+    if (bar) {
+      const tickerText = `AVVISO FERIE · ${periodText}: ${userMessage}${reopenText ? ` · ${reopenText}` : ""}`;
+      bar.querySelectorAll("[data-holiday-ticker]").forEach((el) => {
+        el.textContent = tickerText;
+      });
+      bar.hidden = false;
+    }
+
+    if (modal) {
+      bindHolidayModalCloseHandlers();
+      const datesEl = document.getElementById("holiday-modal-dates");
+      const msgEl = document.getElementById("holiday-modal-message");
+      const reopenEl = document.getElementById("holiday-modal-reopen");
+
+      if (datesEl) datesEl.textContent = periodText;
+      if (msgEl) msgEl.textContent = userMessage;
+      if (reopenEl) {
+        reopenEl.textContent = reopenText;
+        reopenEl.hidden = !reopenText;
+      }
+
+      const seenKey = `ts_ferie_seen_${holidayState.startDate}_${holidayState.endDate}`;
+      let alreadySeen = false;
+      try {
+        alreadySeen = window.sessionStorage.getItem(seenKey) === "1";
+      } catch {
+        alreadySeen = false;
+      }
+
+      if (!alreadySeen) {
+        modal.hidden = false;
+        document.body.classList.add("has-holiday-modal");
+      }
+    }
+  }
+
+  function shouldUseStaticFerieFallback() {
+    const host = window.location.hostname || "";
+    return (
+      window.location.protocol === "file:" ||
+      host === "127.0.0.1" ||
+      host === "localhost" ||
+      host.endsWith(".github.io")
+    );
+  }
+
+  async function loadHolidayConfig() {
+    const endpoints = shouldUseStaticFerieFallback() ? ["./ferie.json"] : ["./api/ferie", "./ferie.json"];
+
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data && typeof data === "object") {
+          holidayState = {
+            active: Boolean(data.active),
+            startDate: typeof data.startDate === "string" ? data.startDate.trim() : "",
+            endDate: typeof data.endDate === "string" ? data.endDate.trim() : "",
+            message: typeof data.message === "string" ? data.message.trim() : ""
+          };
+          const { isoDate } = getRomeDateParts();
+          updateWorkshopStatusUI();
+          renderHolidayNotice(isoDate);
+          return;
+        }
+      } catch {
+        // Fallback al percorso successivo o stato standard orari
+      }
+    }
+  }
+
   updateWorkshopStatusUI();
   setInterval(updateWorkshopStatusUI, 60000);
+  loadHolidayConfig();
   initMobileMenu();
   initConsentMapLoader();
   initScrollReveal();

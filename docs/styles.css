@@ -366,10 +366,16 @@ p {
   animation: none;
 }
 
+.status-sign .status-label {
+  white-space: nowrap;
+}
+
 .status-sign-lg {
   padding: 0.58rem 1.05rem;
   font-size: 0.84rem;
   gap: 0.6rem;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .status-subtext {
@@ -624,6 +630,7 @@ p {
 /* ---------- Sections ---------- */
 .section {
   padding: 4rem 0;
+  scroll-margin-top: 112px;
 }
 
 .section-alt {
@@ -754,7 +761,7 @@ p {
 
 .photo-card img {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   transition: transform 0.45s ease;
 }
@@ -1199,6 +1206,175 @@ a.contact-item:hover {
   transform: translateY(0);
 }
 
+/* ---------- Avviso Chiusura per Ferie (Barra + Modale) ---------- */
+.holiday-bar[hidden],
+.holiday-modal[hidden] {
+  display: none !important;
+}
+
+.holiday-bar {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.2), rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.2));
+  border-bottom: 1px solid rgba(245, 158, 11, 0.42);
+  color: #fef3c7;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.holiday-bar-track {
+  display: flex;
+  width: max-content;
+  padding: 0.44rem 0;
+  animation: holidayMarquee 26s linear infinite;
+}
+
+.holiday-bar:hover .holiday-bar-track {
+  animation-play-state: paused;
+}
+
+.holiday-bar-item {
+  white-space: nowrap;
+  padding-inline: 2.5rem;
+}
+
+@keyframes holidayMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+body.has-holiday-modal {
+  overflow: hidden;
+}
+
+.holiday-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.holiday-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.holiday-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #171d29, #10141c);
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.65),
+    0 0 36px rgba(245, 158, 11, 0.14);
+  padding: 1.75rem 1.65rem 1.55rem;
+}
+
+.holiday-modal-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.holiday-modal-close:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.holiday-modal-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: calc(100% - 46px);
+  padding: 0.3rem 0.72rem;
+  border-radius: 999px;
+  background: var(--amber-soft);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: var(--amber-bright);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.holiday-modal-kicker .status-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber-bright);
+  box-shadow: 0 0 8px var(--amber-glow);
+  flex-shrink: 0;
+}
+
+#holiday-modal-title {
+  margin: 0.85rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.32rem, 2.5vw, 1.62rem);
+  line-height: 1.2;
+}
+
+.holiday-modal-dates {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--amber-bright);
+}
+
+.holiday-modal-message {
+  margin: 0 0 0.85rem;
+  color: var(--text);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.holiday-modal-reopen {
+  margin: 0 0 1.25rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.holiday-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.holiday-modal-actions .btn {
+  flex: 1 1 170px;
+  justify-content: center;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
   .trust-strip {
@@ -1237,7 +1413,7 @@ a.contact-item:hover {
   .nav-links {
     display: none;
     position: absolute;
-    top: 72px;
+    top: 100%;
     left: 0;
     right: 0;
     z-index: 60;
@@ -1307,7 +1483,7 @@ a.contact-item:hover {
   }
 
   .nav-links {
-    top: 68px;
+    top: 100%;
   }
 
   .hero {
@@ -1347,6 +1523,17 @@ a.contact-item:hover {
   .legal-article {
     padding: 1.4rem;
   }
+
+  .holiday-modal-dialog {
+    padding: 1.4rem 1.15rem 1.25rem;
+  }
+
+  .holiday-modal-kicker {
+    font-size: 0.64rem;
+    letter-spacing: 0.03em;
+    padding: 0.28rem 0.6rem;
+    gap: 0.36rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1357,8 +1544,25 @@ a.contact-item:hover {
   .neon-track::after,
   .status-sign.is-open,
   .status-sign.is-open .status-led,
-  .today-dot {
+  .today-dot,
+  .holiday-bar-track {
     animation: none;
+  }
+
+  .holiday-bar-track {
+    width: 100%;
+    justify-content: center;
+    padding: 0.44rem 1rem;
+  }
+
+  .holiday-bar-item {
+    white-space: normal;
+    text-align: center;
+    padding-inline: 0;
+  }
+
+  .holiday-bar-clone {
+    display: none;
   }
 
   .reveal {
