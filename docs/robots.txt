@@ -1,2 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /ferie-admin/
+Disallow: /api/
+
+Sitemap: https://tireservice.it/sitemap.xml
